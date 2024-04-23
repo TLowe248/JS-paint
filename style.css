@@ -13,6 +13,9 @@ body {
     justify-content: center;
     height: 100vh;
     margin: 0;
+    background: url("images/sky.png") no-repeat;
+    background-size: cover;
+    background-position: bottom;
 }
 
 canvas {
@@ -43,4 +46,9 @@ canvas {
 
 .toolbox > *:last-child {
     margin-left: auto;
+}
+
+.toolbox > * > * {
+    height: 50px;
+    width: 50px;
 }
