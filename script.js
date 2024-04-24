@@ -10,6 +10,7 @@ let color = 'black';
 let x;
 let y;
 let mouseButton = 0;
+let currentImage;
 
 ctx.beginPath();
 ctx.strokeStyle = 'white';
@@ -52,23 +53,26 @@ document.getElementById("clear").onclick = () => {
 document.getElementById("save").onclick = download;
 
 canvas.addEventListener('mousedown', (e) => {
+    if (mouseButton != 2 && !e.shiftKey) {
+        drawCircle(e.offsetX, e.offsetY)
+    }
+    // sets current image, so that previews work
+    currentImage = ctx.getImageData(0, 0, canvas.width, canvas.height)
     // Sets the x and y, and draws a circle there, to allow for taps
-    if (e.button != 2) {
-        isPressed = true;
-    } else {
+    isPressed = true;
+    if (e.button == 2) {
         mouseButton = 2;
     }
 
     x = e.offsetX;
     y = e.offsetY;
-    drawCircle(x, y);
 });
 
 document.addEventListener('mousedown', (e) => {
+    currentImage = ctx.getImageData(0, 0, canvas.width, canvas.height)
     // Set pressed even when outside canvas.
-    if (e.button != 2) {
-        isPressed = true;
-    } else {
+    isPressed = true;
+    if (e.button == 2) {
         mouseButton = 2;
     }
 })
@@ -80,24 +84,24 @@ canvas.addEventListener('mouseup', (e) => {
     const x2 = e.offsetX;
     const y2 = e.offsetY;
 
-    if (e.button == 2) {
-        drawRect(x, y, x2, y2)
+    if (!e.button == 2) {
+        mouseButton = 2;
     } else {
-        drawCircle(x, y);
-        drawCircle(x2, y2);
-        drawLine(x, y, x2, y2);
+        mouseButton = 0;
     }
 
     x = x2;
     y = y2;
     x = undefined;
     y = undefined;
+    e.stopPropagation();
 });
 
 document.addEventListener('mouseup', () => {
     // Set pressed even when outside canvas.
     isPressed = false;
     mouseButton = 0
+    ctx.putImageData(currentImage, 0, 0);
 })
 
 canvas.addEventListener("mouseenter", (e) => {
@@ -114,21 +118,44 @@ canvas.addEventListener('mouseleave', () => {
 
 canvas.addEventListener('mousemove', (e) => {
     e.preventDefault();
-    if(mouseButton == 0 && inCanvas && isPressed && !e.shiftKey) {
-        // If the user isn't holding shift, draw as normal, using lines to prevent gaps.
-        // If they are, a line tool is being used, so don't draw until it or the mouse is released.
+    if(isPressed) {
+        if (mouseButton == 0) {
+            if (e.shiftKey) {
+                // if the line tool is being used, keep the preview a preview by setting the canvas to currentImage until release
+                ctx.putImageData(currentImage, 0, 0);
+            }
+            // If the user isn't holding shift, draw as normal, using lines to prevent gaps.
+            // If they are, a line tool is being used, so don't draw until it or the mouse is released.
 
-        const x2 = e.offsetX;
-        const y2 = e.offsetY;
+            const x2 = e.offsetX;
+            const y2 = e.offsetY;
 
-        drawCircle(x, y);
-        drawCircle(x2, y2);
-        drawLine(x, y, x2, y2);
+            drawCircle(x, y);
+            drawCircle(x2, y2);
+            drawLine(x, y, x2, y2);
 
-        x = x2;
-        y = y2;
+            if (!e.shiftKey) {
+                x = x2;
+                y = y2;
+                currentImage = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                }
+        } else {
+            ctx.putImageData(currentImage,0,0)
+            const x2 = e.offsetX;
+            const y2 = e.offsetY;
+
+            if (e.shiftKey) {
+                drawHollowCircle(x, y, Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2)));
+            } else {
+                drawRect(x,y,x2,y2);
+            }
+        }
     }
 });
+
+document.addEventListener('mousemove', (e) => {
+    e.preventDefault();
+})
 
 function drawCircle(x, y) {
     // draws a circle by arcing at the target location
@@ -165,4 +192,20 @@ function drawRect(x1, y1, x2, y2) {
     drawLine(x2, y2, x2, y1);
     drawCircle(x2, y1);
     drawLine(x2, y1, x1, y1)
+    if (document.getElementById("fill").checked) {
+        ctx.fillRect(x1, y1, x2-x1, y2-y1)
+    }
+}
+
+function drawHollowCircle(x1, y1, distance) {
+    // draws a circle by arcing at the target location
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 2;
+    ctx.arc(x, y, distance, 0, Math.PI * 2);
+    ctx.stroke();
+    if (document.getElementById("fill").checked) {
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
 }

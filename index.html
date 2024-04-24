@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
     <title>Drawing App</title>
 </head>
-<body>
+<body oncontextmenu="return false;">
     <!-- The drawing area -->
     <canvas id="canvas" width="800", height="800" oncontextmenu="return false;"></canvas>
     <!-- The tools. increase brush size, decrease brush size, change color, save.-->
@@ -16,6 +16,7 @@
         <button id="increase"><img src="images/plus.png" alt=""></button>
         <input type="color" id="color">
         <button id="clear"><img src="images/clear.png" alt=""></button>
+        <input type="checkbox" id="fill">
         <a href="#" id="save" download=""><img src="images/save.png" alt=""></button>
     </div>
 
